@@ -34,6 +34,9 @@ def load_data():
             'TYPE': 'type'
         }, inplace=True)
 
+        # Ajout d'un ID unique pour chaque restaurant
+        df['id'] = df.index + 1  # +1 pour commencer à 1 au lieu de 0
+
         return df.to_dict(orient="records"), None
     except Exception as e:
         return [], str(e)
@@ -70,6 +73,18 @@ def get_restaurant_by_code(code_postal):
         return jsonify({"message": f"Aucun restaurant trouvé avec le code postal {code_postal}"}), 404
 
     return jsonify({"count": len(restaurants), "restaurants": restaurants})
+
+@app.route('/restaurants/id/<int:restaurant_id>', methods=['GET'])
+def get_restaurant_by_id(restaurant_id):
+    data, error = load_data()
+    if error:
+        return jsonify({"error": error}), 500
+
+    restaurant = next((r for r in data if r.get('id') == restaurant_id), None)
+    if not restaurant:
+        return jsonify({"message": f"Aucun restaurant trouvé avec l'ID {restaurant_id}"}), 404
+
+    return jsonify(restaurant)
 
 @app.route('/restaurants/type/<type>', methods=['GET'])
 def get_restaurant_by_type(type):
